@@ -1,0 +1,11 @@
+{
+  "name": "radiomaster-reader",
+  "version-string": "0.1.0",
+  "builtin-baseline": "bba8b52f6dea74159bba855ef00376e588d6ea0a",
+  "dependencies": [
+    {
+      "name": "boost-asio",
+      "default-features": false
+    }
+  ]
+}

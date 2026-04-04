@@ -3,6 +3,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 
+#include "joystick_reader.hpp"
+
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -262,15 +264,15 @@ const DeviceInfo* SelectDevice(const std::vector<DeviceInfo>& devices, const Con
     return &devices.front();
 }
 
-void PrintLiveLine(const JOYINFOEX& info, int hz) {
+void PrintLiveLine(const JoystickState& state, int hz) {
     std::cout
         << '\r'
-        << "X:" << std::setw(6) << info.dwXpos
-        << " Y:" << std::setw(6) << info.dwYpos
-        << " Z:" << std::setw(6) << info.dwZpos
-        << " R:" << std::setw(6) << info.dwRpos
-        << " U:" << std::setw(6) << info.dwUpos
-        << " V:" << std::setw(6) << info.dwVpos
+        << "X:" << std::setw(6) << state.x
+        << " Y:" << std::setw(6) << state.y
+        << " Z:" << std::setw(6) << state.z
+        << " R:" << std::setw(6) << state.r
+        << " U:" << std::setw(6) << state.u
+        << " V:" << std::setw(6) << state.v
         << "  @ " << hz << " Hz   ";
     std::cout.flush();
 }
@@ -307,10 +309,6 @@ int main(int argc, char** argv) {
         << "Showing raw HID axes X/Y/Z/R/U/V.\n"
         << "Press Ctrl+C to stop.\n";
 
-    JOYINFOEX info{};
-    info.dwSize = sizeof(info);
-    info.dwFlags = JOY_RETURNX | JOY_RETURNY | JOY_RETURNZ | JOY_RETURNR | JOY_RETURNU | JOY_RETURNV;
-
     TimerResolutionGuard timer_resolution_guard;
 
     using clock = std::chrono::steady_clock;
@@ -318,22 +316,22 @@ int main(int argc, char** argv) {
     auto next_tick = clock::now();
 
     while (g_running) {
-        const MMRESULT result = joyGetPosEx(device->id, &info);
-        if (result != JOYERR_NOERROR) {
-            std::cerr << "\nFailed to read joystick data, code: " << result << "\n";
+        const auto state = ReadJoystickState(device->id);
+        if (!state.has_value()) {
+            std::cerr << "\nFailed to read joystick data.\n";
             return 1;
         }
         // Тут!!!!!!! запускаю dc для надсилання даних
         if (config->csv) {
             std::cout
-                << info.dwXpos << ","
-                << info.dwYpos << ","
-                << info.dwZpos << ","
-                << info.dwRpos << ","
-                << info.dwUpos << ","
-                << info.dwVpos << "\n";
+                << state->x << ","
+                << state->y << ","
+                << state->z << ","
+                << state->r << ","
+                << state->u << ","
+                << state->v << "\n";
         } else {
-            PrintLiveLine(info, config->hz);
+            PrintLiveLine(*state, config->hz);
         }
 
         next_tick += period;
