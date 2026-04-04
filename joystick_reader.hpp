@@ -9,12 +9,22 @@
 #include <optional>
 
 struct JoystickState {
+    std::uint16_t v = 0;
+    std::uint16_t z = 0;
     std::uint16_t x = 0;
     std::uint16_t y = 0;
-    std::uint16_t z = 0;
-    std::uint16_t r = 0;
-    std::uint16_t u = 0;
-    std::uint16_t v = 0;
 };
 
-std::optional<JoystickState> ReadJoystickState(UINT device_id);
+class JoystickReader {
+public:
+    explicit JoystickReader(std::optional<UINT> device_id = std::nullopt);
+
+    bool IsConnected();
+    std::optional<UINT> GetDeviceId();
+    std::optional<JoystickState> Read();
+
+private:
+    std::optional<UINT> requested_device_id_;
+};
+
+std::optional<JoystickState> ReadJoystickState(std::optional<UINT> device_id = std::nullopt);

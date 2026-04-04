@@ -267,12 +267,10 @@ const DeviceInfo* SelectDevice(const std::vector<DeviceInfo>& devices, const Con
 void PrintLiveLine(const JoystickState& state, int hz) {
     std::cout
         << '\r'
-        << "X:" << std::setw(6) << state.x
-        << " Y:" << std::setw(6) << state.y
+        << "V:" << std::setw(6) << state.v
         << " Z:" << std::setw(6) << state.z
-        << " R:" << std::setw(6) << state.r
-        << " U:" << std::setw(6) << state.u
-        << " V:" << std::setw(6) << state.v
+        << " X:" << std::setw(6) << state.x
+        << " Y:" << std::setw(6) << state.y
         << "  @ " << hz << " Hz   ";
     std::cout.flush();
 }
@@ -309,6 +307,12 @@ int main(int argc, char** argv) {
         << "Showing raw HID axes X/Y/Z/R/U/V.\n"
         << "Press Ctrl+C to stop.\n";
 
+    JoystickReader joystick_reader(device->id);
+    if (!joystick_reader.IsConnected()) {
+        std::cerr << "Joystick is not connected.\n";
+        return 1;
+    }
+
     TimerResolutionGuard timer_resolution_guard;
 
     using clock = std::chrono::steady_clock;
@@ -316,7 +320,12 @@ int main(int argc, char** argv) {
     auto next_tick = clock::now();
 
     while (g_running) {
-        const auto state = ReadJoystickState(device->id);
+        if (!joystick_reader.IsConnected()) {
+            std::cerr << "\nJoystick was disconnected.\n";
+            return 1;
+        }
+
+        const auto state = joystick_reader.Read();
         if (!state.has_value()) {
             std::cerr << "\nFailed to read joystick data.\n";
             return 1;
@@ -324,12 +333,10 @@ int main(int argc, char** argv) {
         // Тут!!!!!!! запускаю dc для надсилання даних
         if (config->csv) {
             std::cout
-                << state->x << ","
-                << state->y << ","
+                << state->v << ","
                 << state->z << ","
-                << state->r << ","
-                << state->u << ","
-                << state->v << "\n";
+                << state->x << ","
+                << state->y << "\n";
         } else {
             PrintLiveLine(*state, config->hz);
         }
