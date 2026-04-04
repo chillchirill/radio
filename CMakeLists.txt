@@ -36,10 +36,10 @@ function(add_udp_example target_name source_file)
 endfunction()
 
 add_library(joystick_reader STATIC
-    joystick_reader.cpp
+    examples/joystick_reader.cpp
 )
 
-target_include_directories(joystick_reader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(joystick_reader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 target_link_libraries(joystick_reader PUBLIC winmm)
 configure_target_warnings(joystick_reader)
 
