@@ -173,6 +173,14 @@ int main(int argc, char** argv) {
             return 1;
         }
 
+        const auto device_id = joystick_reader.GetDeviceId();
+        if (!device_id.has_value()) {
+            std::cerr << "Failed to resolve joystick id." << std::endl;
+            return 1;
+        }
+
+        std::cout << "Using joystick id=" << *device_id << std::endl;
+
         for (;;) {
             if (!joystick_reader.IsConnected()) {
                 std::cerr << "Joystick was disconnected." << std::endl;

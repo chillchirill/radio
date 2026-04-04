@@ -25,6 +25,7 @@ public:
 
 private:
     std::optional<UINT> requested_device_id_;
+    std::optional<UINT> resolved_device_id_;
 };
 
 std::optional<JoystickState> ReadJoystickState(std::optional<UINT> device_id = std::nullopt);
