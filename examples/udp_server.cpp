@@ -1,5 +1,6 @@
 #include <boost/asio.hpp>
 
+#include "joystick_reader.hpp"
 #include "udp_protocol.hpp"
 
 #include <array>
@@ -166,15 +167,30 @@ int main(int argc, char** argv) {
         UdpPasswordServer server(io_context, port, password);
         server.WaitForAuthorizedClient();
 
-        std::uint16_t counter = 1;
-        for (;;) {
-            server.SendValues(
-                counter,
-                static_cast<unsigned short>(counter + 1),
-                static_cast<unsigned short>(counter + 2),
-                static_cast<unsigned short>(counter + 3));
+        JoystickReader joystick_reader;
+        if (!joystick_reader.IsConnected()) {
+            std::cerr << "Joystick is not connected." << std::endl;
+            return 1;
+        }
 
-            counter = static_cast<std::uint16_t>(counter + 4);
+        for (;;) {
+            if (!joystick_reader.IsConnected()) {
+                std::cerr << "Joystick was disconnected." << std::endl;
+                return 1;
+            }
+
+            const auto state = joystick_reader.Read();
+            if (!state.has_value()) {
+                std::cerr << "Failed to read joystick data." << std::endl;
+                return 1;
+            }
+
+            server.SendValues(
+                state->v,
+                state->z,
+                state->x,
+                state->y);
+
             std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms));
         }
     } catch (const std::exception& error) {
