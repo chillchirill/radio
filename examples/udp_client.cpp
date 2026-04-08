@@ -9,6 +9,18 @@
 #include <string>
 #include <string_view>
 
+#include <cstdio>
+#include <stdexcept>
+#include <unistd.h>
+#include "./SPILib/ABE_ADCDACPi.h"
+
+using namespace ABElectronics_CPP_Libraries;
+
+void clear_screen ()
+{
+    printf("\033[2J\033[1;1H");
+}
+
 namespace net = boost::asio;
 using udp = net::ip::udp;
 
@@ -86,6 +98,15 @@ public:
             }
             //тут отримали данні
             const auto payload = udp_example::DecodePayload(packet);
+            //adc_dac - ADC DAC Pi Zero звично підключений
+            //adc_dac2 - другий підключений проводами використовуючи іншу SPI шину
+
+            //v z x y З джойстика отримали uint_16 в 16 біт. Перетворили їх в 12 для DAC
+            adc_dac.set_dac_raw(payload.value1 >> 4,1); //v - лівий
+            adc_dac.set_dac_raw(payload.value2 >> 4,2); //z - лівий
+            adc_dac2.set_dac_raw(payload.value3 >> 4,1); //x - правий
+            adc_dac2.set_dac_raw(payload.value4 >> 4,2); //y - правий
+
             std::cout
                 << static_cast<unsigned int>(payload.value1) << ' '
                 << static_cast<unsigned int>(payload.value2) << ' '
@@ -121,18 +142,39 @@ int main(int argc, char** argv) {
         std::cerr << "Invalid port: " << argv[3] << std::endl;
         return 1;
     }
+    
+
+    //SPI part
+    setvbuf (stdout, nullptr, _IONBF, 0); // needed to print to the command line
+
+	ADCDACPi adc_dac;
+	ADCDACPi adc_dac2("", "/dev/spidev1.0"); // second SPI
+	if (adc_dac.open_dac() != 1){ // open the DAC SPI channel
+		printf("first spi failed\n");
+		return(1); // if the SPI bus fails to open exit the program
+	}
+	if (adc_dac2.open_dac() != 1){ // open the DAC SPI channel
+		printf("second spi failed\n");
+		return(1); // if the SPI bus fails to open exit the program
+	}
+	adc_dac.set_dac_gain(2); // set the DAC gain to 2 which will give a voltage range of 0 to 3.3V
+	adc_dac2.set_dac_gain(2);
 
     try {
         net::io_context io_context;
         UdpPasswordClient client(io_context, host, port);
 
         if (!client.Authorize(password)) {
+            adc_dac.close_dac();
+	        adc_dac2.close_dac();
             return 1;
         }
 
         client.ReceiveLoop();
     } catch (const std::exception& error) {
         std::cerr << "UDP client failed: " << error.what() << std::endl;
+        adc_dac.close_dac();
+	    adc_dac2.close_dac();
         return 1;
     }
 }
