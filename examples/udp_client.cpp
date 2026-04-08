@@ -25,6 +25,9 @@ namespace net = boost::asio;
 using udp = net::ip::udp;
 
 namespace {
+    
+ADCDACPi adc_dac;
+ADCDACPi adc_dac2("", "/dev/spidev1.0"); // second SPI
 
 constexpr std::string_view kDefaultHost = "127.0.0.1";
 constexpr unsigned short kDefaultPort = 9000;
@@ -147,8 +150,7 @@ int main(int argc, char** argv) {
     //SPI part
     setvbuf (stdout, nullptr, _IONBF, 0); // needed to print to the command line
 
-	ADCDACPi adc_dac;
-	ADCDACPi adc_dac2("", "/dev/spidev1.0"); // second SPI
+	
 	if (adc_dac.open_dac() != 1){ // open the DAC SPI channel
 		printf("first spi failed\n");
 		return(1); // if the SPI bus fails to open exit the program
