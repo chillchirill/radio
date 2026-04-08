@@ -35,23 +35,27 @@ function(add_udp_example target_name source_file)
     configure_target_warnings(${target_name})
 endfunction()
 
-add_library(joystick_reader STATIC
-    examples/joystick_reader.cpp
-)
+if(WIN32)
+    add_library(joystick_reader STATIC
+        examples/joystick_reader.cpp
+    )
 
-target_include_directories(joystick_reader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-target_link_libraries(joystick_reader PUBLIC winmm)
-configure_target_warnings(joystick_reader)
+    target_include_directories(joystick_reader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+    target_link_libraries(joystick_reader PUBLIC winmm)
+    configure_target_warnings(joystick_reader)
 
-add_executable(radiomaster_reader
-    main.cpp
-)
+    add_executable(radiomaster_reader
+        main.cpp
+    )
 
-target_link_libraries(radiomaster_reader PRIVATE joystick_reader)
-configure_target_warnings(radiomaster_reader)
+    target_link_libraries(radiomaster_reader PRIVATE joystick_reader)
+    configure_target_warnings(radiomaster_reader)
 
-add_udp_example(udp_server examples/udp_server.cpp)
-target_link_libraries(udp_server PRIVATE joystick_reader)
+    add_udp_example(udp_server examples/udp_server.cpp)
+    target_link_libraries(udp_server PRIVATE joystick_reader)
+else()
+    message(STATUS "Skipping Windows-only targets: radiomaster_reader, joystick_reader, udp_server.")
+endif()
 
 if(UNIX AND NOT APPLE)
     add_library(spilib STATIC
