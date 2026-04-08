@@ -51,6 +51,21 @@ target_link_libraries(radiomaster_reader PRIVATE joystick_reader)
 configure_target_warnings(radiomaster_reader)
 
 add_udp_example(udp_server examples/udp_server.cpp)
-add_udp_example(udp_client examples/udp_client.cpp)
-
 target_link_libraries(udp_server PRIVATE joystick_reader)
+
+if(UNIX AND NOT APPLE)
+    add_library(spilib STATIC
+        examples/SPILib/ABE_ADCDACPi.cpp
+    )
+
+    target_include_directories(spilib PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/SPILib
+    )
+
+    configure_target_warnings(spilib)
+
+    add_udp_example(udp_client examples/udp_client.cpp)
+    target_link_libraries(udp_client PRIVATE spilib)
+else()
+    message(STATUS "Skipping udp_client and SPILib: Linux SPI headers are required.")
+endif()
