@@ -25,7 +25,7 @@ namespace net = boost::asio;
 using udp = net::ip::udp;
 
 namespace {
-    
+
 ADCDACPi adc_dac;
 ADCDACPi adc_dac2("", "/dev/spidev1.0"); // second SPI
 
@@ -109,7 +109,7 @@ public:
             adc_dac.set_dac_raw(payload.value2 >> 4,2); //z - лівий
             adc_dac2.set_dac_raw(payload.value3 >> 4,1); //x - правий
             adc_dac2.set_dac_raw(payload.value4 >> 4,2); //y - правий
-
+            //не забути стерти
             std::cout
                 << static_cast<unsigned int>(payload.value1) << ' '
                 << static_cast<unsigned int>(payload.value2) << ' '
