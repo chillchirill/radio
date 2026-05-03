@@ -1,5 +1,4 @@
 #pragma once
-//Загалом хєрня щоб пакувати в буфер і розпаковувати
 #include <array>
 #include <cstddef>
 #include <cstdint>

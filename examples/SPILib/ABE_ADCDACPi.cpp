@@ -38,6 +38,8 @@ using namespace ABElectronics_CPP_Libraries;
 // 	dacvoltage = 2.048; // maximum voltage for the DAC output
 // }
 
+
+// new realisation of constructor with parameters
 ADCDACPi::ADCDACPi(const char* adcDev, const char* dacDev)
     : adc_device(adcDev), dac_device(dacDev)
 {
